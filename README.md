@@ -1,3 +1,5 @@
+测试是否有github ci
+
 [![pipeline status](https://git.libretro.com/libretro/mame/badges/master/pipeline.svg)](https://git.libretro.com/libretro/mame/-/commits/master)
 # **Libretro notice** #
 
