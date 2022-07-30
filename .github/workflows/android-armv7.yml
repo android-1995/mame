@@ -25,9 +25,9 @@ jobs:
       run: |
         #make -f Makefile.libretro SUBTARGET=arcade platform=android-arm -j8
         make SUBTARGET=arcade OSD="retro" verbose=1 RETRO=1 NOWERROR=1  NOASM="1" gcc="android-arm" OS="linux" TARGETOS="android-arm" CONFIG=libretro NO_USE_MIDI="1" TARGET=mame -j4
-        /usr/local/lib/android/sdk/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/arm-linux-androideabi/bin/strip -s mame_libretro_android.so
-        zip -9 mame_libretro_android.so.zip mame_libretro_android.so
-        sha256sum mame_libretro_android.so.zip > mame_libretro_android.so.zip.sha256
+        /usr/local/lib/android/sdk/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/arm-linux-androideabi/bin/strip -s mamearcade_libretro_android.so
+        zip -9 mamearcade_libretro_android.so.zip mamearcade_libretro_android.so
+        sha256sum mamearcade_libretro_android.so.zip > mamearcade_libretro_android.so.zip.sha256
     - name: Create new release
       uses: marvinpinto/action-automatic-releases@latest
       with:
@@ -36,10 +36,10 @@ jobs:
         prerelease: false
         title: Android ARMv7
         files: |
-          mame_libretro_android.so.zip
-          mame_libretro_android.so.zip.sha256
+          mamearcade_libretro_android.so.zip
+          mamearcade_libretro_android.so.zip.sha256
     - name: Save artifact
       uses: actions/upload-artifact@v2
       with:
-        name: mame_libretro_android.so.zip
-        path: mame_libretro_android.so.zip
+        name: mamearcade_libretro_android.so.zip
+        path: mamearcade_libretro_android.so.zip
