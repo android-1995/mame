@@ -1,0 +1,45 @@
+name: MAME-libretro Android x86_64
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  AndroidX64:
+    name: Build for Android x86_64
+    runs-on: ubuntu-latest
+
+    env:
+      ANDROID_NDK_VERSION: "21.3.6528147"
+      ANDROID_NDK_ROOT:    ${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}
+      ANDROID_NDK_LLVM:    ${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64
+      ANDROID_NDK_X64:     "${ANDROID_NDK_ROOT}/toolchains/x86_64-4.9/prebuilt/linux-x86_64"
+
+    steps:
+    - name: Install Android NDK
+      run: echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager --install "ndk;${ANDROID_NDK_VERSION}"
+    - name: Checkout source
+      uses: actions/checkout@v2
+    - name: Build libretro mame core
+      run: |
+        #make -f Makefile.libretro SUBTARGET=arcade platform=android-x86_64 -j8
+        make SUBTARGET=arcade OSD="retro" verbose=1 RETRO=1 NOWERROR=1 NOASM="1" gcc="android-x64" OS="linux" TARGETOS="android-x64" CONFIG=libretro NO_USE_MIDI="1" TARGET=mame -j8
+        /usr/local/lib/android/sdk/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/x86_64/bin/strip -s mamearcade_libretro_android.so
+        zip -9 mamearcade_libretro_android.so.zip mamearcade_libretro_android.so
+        sha256sum mamearcade_libretro_android.so.zip > mamearcade_libretro_android.so.zip.sha256
+#    - name: Create new release
+#      uses: marvinpinto/action-automatic-releases@latest
+#      with:
+#        repo_token: ${{ secrets.GITHUB_TOKEN }}
+#        automatic_release_tag: Android_ARMv7
+#        prerelease: false
+#        title: Android ARMv7
+#        files: |
+#          mamearcade_libretro_android.so.zip
+#          mamearcade_libretro_android.so.zip.sha256
+    - name: Save artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: mamearcade_libretro_android.so.zip
+        path: mamearcade_libretro_android.so.zip
