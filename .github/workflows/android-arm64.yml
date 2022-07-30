@@ -25,7 +25,7 @@ jobs:
     - name: Build libretro mame core
       run: |
         #make -f Makefile.libretro platform=android-arm64 -j8
-        make SUBTARGET=arcade OSD="retro" verbose=1 RETRO=1 NOWERROR=1  NOASM="1" gcc="android-arm" OS="linux" TARGETOS="android-arm64" CONFIG=libretro NO_USE_MIDI="1" TARGET=mame -j4
+        make SUBTARGET=arcade OSD="retro" verbose=1 RETRO=1 NOWERROR=1  NOASM="1" gcc="android-arm64" OS="linux" TARGETOS="android-arm64" CONFIG=libretro NO_USE_MIDI="1" TARGET=mame -j4
         /usr/local/lib/android/sdk/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/aarch64-linux-android/bin/strip -s mame_libretro_android.so
         zip -9 mame_libretro_android.so.zip mame_libretro_android.so
     - name: Create new release
