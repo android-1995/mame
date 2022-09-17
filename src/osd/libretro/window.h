@@ -11,9 +11,9 @@
 #define __RETROWINDOW__
 
 #include "osdretro.h"
-#include "video.h"
 
 #include "modules/osdwindow.h"
+#include "osdsync.h"
 
 #include <cstdint>
 #include <memory>

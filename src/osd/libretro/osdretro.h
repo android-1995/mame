@@ -59,11 +59,11 @@ public:
 
 
 	// joystick mapping
-	const char *joy_index(int index) const { return value(string_format("%s%d", RETROOPTION_JOYINDEX, index).c_str()); }
+	const char *joy_index(int index) const { return value(util::string_format("%s%d", RETROOPTION_JOYINDEX, index).c_str()); }
 	bool sixaxis() const { return bool_value(RETROOPTION_SIXAXIS); }
 
-	const char *mouse_index(int index) const { return value(string_format("%s%d", RETROOPTION_MOUSEINDEX, index).c_str()); }
-	const char *keyboard_index(int index) const { return value(string_format("%s%d", RETROOPTION_KEYBINDEX, index).c_str()); }
+	const char *mouse_index(int index) const { return value(util::string_format("%s%d", RETROOPTION_MOUSEINDEX, index).c_str()); }
+	const char *keyboard_index(int index) const { return value(util::string_format("%s%d", RETROOPTION_KEYBINDEX, index).c_str()); }
 
 	const char *video_driver() const { return value(RETROOPTION_VIDEODRIVER); }
 	const char *render_driver() const { return value(RETROOPTION_RENDERDRIVER); }

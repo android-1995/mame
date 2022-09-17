@@ -21,6 +21,8 @@
 #include "window.h"
 #include "osdretro.h"
 #include "modules/lib/osdlib.h"
+#include "modules/monitor/monitor_module.h"
+
 
 //============================================================
 //  CONSTANTS

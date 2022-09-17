@@ -10,8 +10,12 @@
 #ifndef __DRAWRETRO__
 #define __DRAWRETRO__
 
+// OSD Headers
+#include "osdretro.h"
+
 // MAME headers
-#include "emu.h"
+#include "emucore.h"
+#include "render.h"
 
 // MAMEOS headers
 #include "window.h"

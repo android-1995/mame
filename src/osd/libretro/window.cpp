@@ -399,7 +399,7 @@ int retro_window_info::window_init()
     const screen_device *primary_screen = screen_device_enumerator(machine().root_device()).first();
 
     if (primary_screen != nullptr){
-        retro_fps = ATTOSECONDS_TO_HZ(primary_screen->refresh_attoseconds());
+        retro_fps = primary_screen->frame_period().as_hz();
 	}
 
 	if(alternate_renderer==false){

@@ -7,6 +7,7 @@
 #include "osdepend.h"
 
 #include "emu.h"
+#include "screen.h"
 #include "emuopts.h"
 #include "render.h"
 #include "ui/uimain.h"
@@ -992,6 +993,15 @@ void retro_run(void)
 	else
 		video_cb(NULL, fb_width, fb_height, fb_pitch << LOG_PIXEL_BYTES);
 #endif
+   const screen_device *primary_screen = screen_device_enumerator(mame_machine_manager::instance()->machine()->root_device()).first();
+   float current_screen_refresh = primary_screen->frame_period().as_hz();
+   if (current_screen_refresh != retro_fps) {
+      retro_fps = current_screen_refresh;
+      struct retro_system_av_info av_info;
+      retro_get_system_av_info(&av_info);
+
+      environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &av_info);
+   }
 }
 
 bool retro_load_game(const struct retro_game_info* info)
