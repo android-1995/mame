@@ -122,9 +122,14 @@ void osd_break_into_debugger(const char *message)
 //  osd_get_clipboard_text
 //============================================================
 
-std::string osd_get_clipboard_text(void)
+std::string osd_get_clipboard_text(void) noexcept
 {
 	return NULL;
+}
+
+std::error_condition osd_set_clipboard_text(std::string_view text) noexcept
+{
+	return std::errc::io_error;
 }
 
 

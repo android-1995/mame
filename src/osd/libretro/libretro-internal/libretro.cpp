@@ -942,25 +942,6 @@ void retro_run(void)
 		update_runtime_variables();
 	}
 
-	static int mfirst = 1;
-	if (mfirst == 1)
-	{
-		mfirst++;
-		int res = mmain2(1, RPATH);
-		if (log_cb)log_cb(RETRO_LOG_INFO, "RES:%d\n", res);
-		if (res != 0)
-		{
-			retro_pause = -1;
-			retro_load_ok = false;
-		}
-		else {
-			retro_load_ok = true;
-		}
-		if (log_cb)log_cb(RETRO_LOG_INFO, "MAIN FIRST\n");
-		update_runtime_variables();
-		return;
-	}
-
 	if (NEWGAME_FROM_OSD == 1)
 	{
 		struct retro_system_av_info ninfo;
@@ -993,15 +974,20 @@ void retro_run(void)
 	else
 		video_cb(NULL, fb_width, fb_height, fb_pitch << LOG_PIXEL_BYTES);
 #endif
-   const screen_device *primary_screen = screen_device_enumerator(mame_machine_manager::instance()->machine()->root_device()).first();
-   float current_screen_refresh = primary_screen->frame_period().as_hz();
-   if (current_screen_refresh != retro_fps) {
-      retro_fps = current_screen_refresh;
-      struct retro_system_av_info av_info;
-      retro_get_system_av_info(&av_info);
+	const screen_device *primary_screen = screen_device_enumerator(mame_machine_manager::instance()->machine()->root_device()).first();
 
-      environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &av_info);
-   }
+	if (primary_screen) // this was causing a buffer overflow with this check
+	{
+		float current_screen_refresh = primary_screen->frame_period().as_hz();
+
+		if (current_screen_refresh != retro_fps)
+		{
+			retro_fps = current_screen_refresh;
+			struct retro_system_av_info av_info;
+			retro_get_system_av_info(&av_info);
+			environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &av_info);
+		}
+	}
 }
 
 bool retro_load_game(const struct retro_game_info* info)
@@ -1038,6 +1024,23 @@ bool retro_load_game(const struct retro_game_info* info)
 	extract_basename(basename, info->path, sizeof(basename));
 	extract_directory(g_rom_dir, info->path, sizeof(g_rom_dir));
 	strcpy(RPATH, info->path);
+
+  bool updated = false;
+
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
+   {
+      check_variables();
+      update_runtime_variables();
+   }
+
+   int res=mmain2(1,RPATH);
+   if (log_cb)log_cb(RETRO_LOG_INFO,"RES:%d\n",res);
+
+   if (res !=0)
+      exit(0); // bail on ron load failure
+   else
+      retro_load_ok=true;
+
 	return true;
 }
 

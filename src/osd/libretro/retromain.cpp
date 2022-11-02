@@ -42,9 +42,6 @@ public:
 		
 		switch(channel) {
 			case OSD_OUTPUT_CHANNEL_ERROR:
-				frontend_message.msg    = buffer.str().c_str();
-  				frontend_message.frames = 60*5;
-  				environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &frontend_message);
 				lvl = RETRO_LOG_ERROR;
 				break;
 			case OSD_OUTPUT_CHANNEL_INFO:

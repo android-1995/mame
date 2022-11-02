@@ -91,24 +91,25 @@ int PARAMCOUNT=0;
 
 
 // path configuration
-#define NB_OPTPATH 11//12
+#define NB_OPTPATH 13
 
 static const char *dir_name[NB_OPTPATH]= {
-    "cfg","nvram"/*,"hi"*//*,"memcard"*/,"input",
+    "cfg","nvram","plugins","input",
     "states" ,"snaps","diff","samples",
-    "artwork","cheat","ini","hash"
+    "artwork","cheat","ini","hash",""
 };
 
 static const char *opt_name[NB_OPTPATH]= {
-    "-cfg_directory","-nvram_directory"/*,"-hiscore_directory"*/,/*"-memcard_directory",*/"-input_directory",
+    "-cfg_directory","-nvram_directory","-pluginspath","-input_directory",
     "-state_directory" ,"-snapshot_directory","-diff_directory","-samplepath",
-    "-artpath","-cheatpath","-inipath","-hashpath"
+    "-artpath","-cheatpath","-inipath","-hashpath","-homepath"
 };
 
 int opt_type[NB_OPTPATH]={ // 0 for save_dir | 1 for system_dir
-    0,0/*,0*/,0,
+    0,0,1,0,
     0,0,0,1,
-    1,1,1,1
+    1,1,1,1,
+    1
 };
 
 
@@ -706,7 +707,7 @@ if (log_cb)log_cb(RETRO_LOG_INFO,"ARGUV[0]=%s\n",ARGUV[0]);
    Set_Default_Option();
 
    Add_Option("-mouse");
-	
+
    Add_Option("-multimouse");
 
    Set_Path_Option();

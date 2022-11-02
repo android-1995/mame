@@ -772,11 +772,12 @@ void retro_osd_interface::process_lightgun_state(running_machine &machine)
             lightgunstate[j].lightgunBUT[1] = 0x80;
          }
       }
-      lightgunX[j] = gun_x_raw[j] * 2;
-      lightgunY[j] = gun_y_raw[j] * 2;
 
       //Place the cursor at a corner of the screen designated by "Lightgun offscreen position" when the cursor touches a min/max value
-      if (input_state_cb( j, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN ))
+      //The LIGHTGUN_RELOAD input will fire a shot at the bottom-right corner if "Lightgun offscreen position" is set to "fixed (bottom right)"
+	  //That same input will fire a shot at the top-left corner otherwise
+	  //The reload feature of some games fails at the top-left corner
+      if (input_state_cb( j, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN ) && !input_state_cb( j, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_RELOAD ))
 	  {
 		 if (lightgun_offscreen_mode == 1)
 		 {
@@ -788,12 +789,13 @@ void retro_osd_interface::process_lightgun_state(running_machine &machine)
 		    lightgunX[j] = 65535;
 	        lightgunY[j] = 65535;
 		 }
+		 else
+		 {
+            lightgunX[j] = gun_x_raw[j] * 2;
+            lightgunY[j] = gun_y_raw[j] * 2;
+		 }
 	  }
-
-      //The LIGHTGUN_RELOAD input will fire a shot at the bottom-right corner if "Lightgun offscreen position" is set to "fixed (bottom right)"
-	  //That same input will fire a shot at the top-left corner otherwise
-	  //The reload feature of some games fails at the top-left corner
-      if (input_state_cb( j, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_RELOAD ) )
+	  else if (input_state_cb( j, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN ) && input_state_cb( j, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_RELOAD ) )
 	  {
 		 if (lightgun_offscreen_mode == 2)
 		 {
@@ -805,6 +807,24 @@ void retro_osd_interface::process_lightgun_state(running_machine &machine)
 		    lightgunX[j] = -65535;
 	        lightgunY[j] = -65535;
 		 }
+	  }
+	  else if (!input_state_cb( j, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_IS_OFFSCREEN ) && input_state_cb( j, RETRO_DEVICE_LIGHTGUN, 0, RETRO_DEVICE_ID_LIGHTGUN_RELOAD ) )
+	  {
+		 if (lightgun_offscreen_mode == 2)
+		 {
+		    lightgunX[j] = 65535;
+	        lightgunY[j] = 65535;
+		 }
+		 else
+		 {
+		    lightgunX[j] = -65535;
+	        lightgunY[j] = -65535;
+		 }
+	  }
+	  else
+	  {
+         lightgunX[j] = gun_x_raw[j] * 2;
+         lightgunY[j] = gun_y_raw[j] * 2;
 	  }
    }
 }
