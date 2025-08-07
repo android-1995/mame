@@ -665,7 +665,8 @@ void rom_load_manager::display_rom_load_results(bool from_list)
 	{
 		// create the error message and exit fatally
 		osd_printf_error("%s", m_errorstring);
-		throw emu_fatalerror(EMU_ERR_MISSING_FILES, "Required files are missing, the machine cannot be run.");
+		//去掉此处的直接闪退APP，前端通过日志信息处理缺失必要文件的情况
+		//throw emu_fatalerror(EMU_ERR_MISSING_FILES, "Required files are missing, the machine cannot be run.");
 	}
 
 	// if we had warnings, output them, but continue

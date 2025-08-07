@@ -1,3 +1,8 @@
+# **编译说明** #
+## linux
+```
+make -f Makefile.libretro platform=android-arm64 SUBTARGET=arcade -j8 ANDROID_NDK_HOME=/xxx/Android/android-ndk-r22b(替换成你的NDK路径)
+```
 # **Libretro notice** #
 
 Before sending bug reports to the upstream bug tracker, make sure the bugs are reproducible in the latest standalone release.

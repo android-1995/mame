@@ -14,6 +14,7 @@
 #include "uiinput.h"
 #include "drivenum.h"
 #include "../frontend/mame/mame.h"
+#include "../frontend/mame/cheat.h"
 
 #include "libretro.h"
 #include "libretro_shared.h"
@@ -124,6 +125,267 @@ void retro_set_input_poll(retro_input_poll_t cb) { input_poll_cb = cb; }
 void retro_set_video_refresh(retro_video_refresh_t cb) { video_cb = cb; }
 void retro_set_audio_sample(retro_audio_sample_t cb) { }
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_cb = cb; }
+
+
+static void load_mame_cheats_info(void* out) {
+	if(mame_machine_manager::instance() != NULL &&mame_machine_manager::instance()->machine() != NULL){
+	auto& entitys = mame_machine_manager::instance()->cheat().entries();
+	if (entitys.empty())return;
+	std::vector<mame_cheat_info>* list = static_cast<std::vector<mame_cheat_info>*>(out);
+
+	for (auto& entity : entitys) {
+		struct mame_cheat_info info;
+		memset(&info, NULL, sizeof(struct mame_cheat_info));
+		info.is_duplicate = entity->is_duplicate();
+		info.is_itemlist_parameter = entity->is_itemlist_parameter();
+		info.is_oneshot_parameter = entity->is_oneshot_parameter();
+		info.is_onoff = entity->is_onoff();
+		info.is_text_only = entity->is_text_only();
+		info.is_oneshot = entity->is_oneshot();
+		info.description = entity->description();
+		info.comment = entity->comment();
+		info.entity = entity.get();
+		info.m_status = entity->state();
+		if (entity->get_parameter() != nullptr)
+		{
+			info.parameters_current = entity->get_parameter()->text();
+
+
+
+			if (entity->get_parameter()->has_itemlist())
+			{
+				std::vector<std::string>* vlist = new std::vector<std::string>;
+				std::vector<int64_t>* valueList = new std::vector<int64_t>;
+
+				for (auto& item : entity->get_parameter()->get_itemlist()) {
+					vlist->push_back(item.text());
+					valueList->push_back(item.value());
+				}
+
+				info.cheat_parameters_values = valueList;
+				info.cheat_parameters = vlist;
+			}
+			else {
+				info.m_maxval = entity->get_parameter()->get_max_value();
+				info.m_minval = entity->get_parameter()->get_min_value();
+				info.m_value = entity->get_parameter()->get_current_value();
+				info.m_stepval = entity->get_parameter()->get_step_value();
+			}
+
+		}
+		list->push_back(info);
+	}
+	}
+}
+
+static bool reload_mame_cheats() {
+	if (mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL) {
+		mame_machine_manager::instance()->cheat().reload();
+		return true;
+	}
+	return false;
+}
+
+static bool mame_cheats_set_value(int64_t value, void* cheat) {
+	cheat_entry* curcheat = reinterpret_cast<cheat_entry*>(cheat);
+	return curcheat->select_value(value);
+}
+
+static bool mame_active_cheat(void* cheat) {
+	cheat_entry* curcheat = reinterpret_cast<cheat_entry*>(cheat);
+	return  curcheat->activate();
+}
+
+static bool select_default_state(void* cheat) {
+	cheat_entry* curcheat = reinterpret_cast<cheat_entry*>(cheat);
+	return  curcheat->select_default_state();
+}
+static bool select_previous_state(void* cheat) {
+	cheat_entry* curcheat = reinterpret_cast<cheat_entry*>(cheat);
+	return  curcheat->select_previous_state();
+}
+static bool select_next_state(void* cheat) {
+	cheat_entry* curcheat = reinterpret_cast<cheat_entry*>(cheat);
+	return  curcheat->select_next_state();
+}
+static bool mame_cheats_save_all(const char* path) {
+	if (mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL) {
+		return mame_machine_manager::instance()->cheat().save_all(path);
+	}
+	return false;
+}
+
+
+
+static int32_t do_mame_create_card(const char* cardpath, const char* instance_name, const char* brief_instance_name) {
+	if (mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL)
+	{
+
+		std::unordered_set<std::string> devtags;
+		device_image_interface* image_interface = nullptr;
+		for (device_t& dev : device_enumerator(mame_machine_manager::instance()->machine()->root_device()))
+		{
+			if (!devtags.insert(dev.tag()).second)
+				continue;
+			image_interface_enumerator subiter(dev);
+			if (subiter.first() != nullptr)
+			{
+				for (device_image_interface& scan : subiter)
+				{
+					if (!scan.user_loadable())
+						continue;
+					if (strcmp(scan.device().owner()->tag(), dev.tag()) == 0)
+						if (devtags.insert(scan.device().tag()).second)
+						{
+							if (scan.instance_name() == instance_name && scan.brief_instance_name() == brief_instance_name) {
+								image_interface = &scan;
+								break;
+							}
+						}
+				}
+			}
+		}
+		if (image_interface == nullptr) {
+			return 1;
+		}
+		std::pair<std::error_condition, std::string> err = image_interface->create(cardpath, nullptr, nullptr);
+		if (err.first) {
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "do_mame_create_card error:%s", err.second.c_str());
+			return 2;
+		}
+		return 0;
+
+	}
+	return 3;
+}
+
+
+static int32_t do_unload_mame_card(const char* instance_name, const char* brief_instance_name) {
+	if (mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL){
+	std::unordered_set<std::string> devtags;
+	device_image_interface* image_interface = nullptr;
+	for (device_t& dev : device_enumerator(mame_machine_manager::instance()->machine()->root_device()))
+	{
+		if (!devtags.insert(dev.tag()).second)
+			continue;
+		image_interface_enumerator subiter(dev);
+		if (subiter.first() != nullptr)
+		{
+			for (device_image_interface& scan : subiter)
+			{
+				if (!scan.user_loadable())
+					continue;
+				if (strcmp(scan.device().owner()->tag(), dev.tag()) == 0)
+					if (devtags.insert(scan.device().tag()).second)
+					{
+						if (scan.instance_name() == instance_name && scan.brief_instance_name() == brief_instance_name) {
+							image_interface = &scan;
+							break;
+						}
+					}
+			}
+		}
+	}
+	if (image_interface == nullptr) {
+		return 1;
+	}
+	image_interface->unload();
+	return 0;
+	}
+	return 3;
+}
+
+static int32_t do_load_mame_card(const char* path, const char* instance_name, const char* brief_instance_name) {
+	if (mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL) {
+		std::unordered_set<std::string> devtags;
+		device_image_interface* image_interface = nullptr;
+		for (device_t& dev : device_enumerator(mame_machine_manager::instance()->machine()->root_device()))
+		{
+			if (!devtags.insert(dev.tag()).second)
+				continue;
+			image_interface_enumerator subiter(dev);
+			if (subiter.first() != nullptr)
+			{
+				for (device_image_interface& scan : subiter)
+				{
+					if (!scan.user_loadable())
+						continue;
+					if (strcmp(scan.device().owner()->tag(), dev.tag()) == 0)
+						if (devtags.insert(scan.device().tag()).second)
+						{
+							if (scan.instance_name() == instance_name && scan.brief_instance_name() == brief_instance_name) {
+								image_interface = &scan;
+								break;
+							}
+						}
+				}
+			}
+		}
+		if (image_interface == nullptr) {
+			return 1;
+		}
+		std::pair<std::error_condition, std::string> err = image_interface->load(path);
+		if (err.first) {
+			if (log_cb)
+				log_cb(RETRO_LOG_ERROR, "do_load_mame_card error:%s", err.second.c_str());
+			return 2;
+		}
+		return 0;
+	}
+	return 3;
+}
+
+static void load_mane_cardstatus(void* out) {
+	if (mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL) {
+		std::vector<card_status>* output = static_cast<std::vector<card_status>*>(out);
+
+		std::unordered_set<std::string> devtags;
+		for (device_t& dev : device_enumerator(mame_machine_manager::instance()->machine()->root_device()))
+		{
+			if (!devtags.insert(dev.tag()).second)
+				continue;
+			image_interface_enumerator subiter(dev);
+			if (subiter.first() != nullptr)
+			{
+				for (device_image_interface& scan : subiter)
+				{
+					if (!scan.user_loadable())
+						continue;
+					if (strcmp(scan.device().owner()->tag(), dev.tag()) == 0)
+						if (devtags.insert(scan.device().tag()).second)
+						{
+
+							struct card_status status;
+							memset(&status, NULL, sizeof(struct card_status));
+
+							status.brief_instance_name = scan.brief_instance_name().c_str();
+							status.instance_name = scan.instance_name().c_str();
+							status.basename = scan.basename();
+							status.filename = scan.filename();
+							output->push_back(status);
+						}
+				}
+			}
+		}
+	}
+}
+
+static mame_card_callback card_call_back = {
+		&do_mame_create_card ,
+		&do_unload_mame_card ,
+		&do_load_mame_card ,
+		&load_mane_cardstatus,
+		&load_mame_cheats_info,
+		&reload_mame_cheats,
+		&mame_active_cheat,
+		&select_default_state,
+		&select_previous_state,
+		&select_next_state,
+		&mame_cheats_save_all,
+		&mame_cheats_set_value
+};
+
 
 /* Audio output buffer */
 static struct {
@@ -322,6 +584,8 @@ void retro_set_environment(retro_environment_t cb)
    if (environ_cb(RETRO_ENVIRONMENT_GET_LED_INTERFACE, &led_interface))
       if (led_interface.set_led_state && !led_state_cb)
          led_state_cb = led_interface.set_led_state;
+
+   cb(RETRO_MAME_CARD_INTERFACE_SET, &card_call_back);
 }
 
 static void update_runtime_variables(bool startup)
