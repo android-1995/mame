@@ -2,8 +2,7 @@ name: MAME-libretro Android x86_64
 
 on:
   push:
-    branches:
-      - master
+    branches-ignore: [ rebase ]
 
 jobs:
   AndroidX64:
