@@ -196,6 +196,22 @@ android-arm64-v8a:
     - master
     - /^libretro/mame.*$/
 
+# Android ARMv8a (mess)
+android-arm64-v8a-mess:
+  extends:
+    - .libretro-android-make-arm64-v8a
+    - .core-defs
+  variables:
+    TARGET:    mame
+    SUBTARGET: mess
+    CORENAME:  mamemess
+  cache:
+    <<: *global_cache
+    key: "$CI_COMMIT_REF_SLUG-android-arm64-v8a-mess"
+  only:
+    - master
+    - /^libretro/mame.*$/
+
 # Android 64-bit x86
 android-x86_64:
   extends:

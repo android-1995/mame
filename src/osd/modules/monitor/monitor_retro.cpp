@@ -28,16 +28,13 @@ public:
 private:
 	void refresh() override
 	{
-
 		m_pos_size = osd_rect(0,0, fb_width, fb_height);
 		m_usuable_pos_size = osd_rect(0,0, fb_width, fb_height);
 		m_is_primary = (oshandle() == 0);
 
-	if(alternate_renderer==false)
-		set_aspect(retro_aspect);
-		//printf("refreshmonitor  (%d x %d) a:%f\n", fb_width, fb_height,retro_aspect);
+		if (!alternate_renderer)
+		    set_aspect(view_aspect);
 	}
-
 };
 
 //============================================================
@@ -93,7 +90,7 @@ protected:
 		{
 			int i;
 
-			osd_printf_verbose("Enter init_monitors\n");
+			//osd_printf_verbose("Enter init_monitors\n");
 
 			for (i = 0; i < 1; i++)
 			{
@@ -103,19 +100,21 @@ protected:
 				// allocate a new monitor info
 				std::shared_ptr<osd_monitor_info> monitor = std::make_shared<retro_monitor_info>(*this, i, temp, 1.0f);
 
-				osd_printf_verbose("Adding monitor %s (%d x %d)\n", monitor->devicename().c_str(),
-				monitor->position_size().width(), monitor->position_size().height());
+				/*
+				osd_printf_verbose("Adding monitor %s (%d x %d)\n",
+				      monitor->devicename().c_str(),
+				      monitor->position_size().width(),
+				      monitor->position_size().height());
+				*/
 
 				// guess the aspect ratio assuming square pixels
 				monitor->set_aspect(static_cast<float>(monitor->position_size().width()) / static_cast<float>(monitor->position_size().height()));
-printf("Adding monitor %s (%d x %d) a:%f\n", monitor->devicename().c_str(),
-				monitor->position_size().width(), monitor->position_size().height(),(float)monitor->position_size().width()/(float) monitor->position_size().height());
 
 				// hook us into the list
 				add_monitor(monitor);
 			}
 		}
-		osd_printf_verbose("Leave init_monitors\n");
+		//osd_printf_verbose("Leave init_monitors\n");
 
 		return 0;
 	}

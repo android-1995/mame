@@ -19,6 +19,7 @@
 #include "screen.h"
 
 #include "corestr.h"
+#include "path.h"
 #include "png.h"
 #include "xmlfile.h"
 
@@ -500,6 +501,10 @@ void video_manager::exit()
 	// free the snapshot target
 	machine().render().target_free(m_snap_target);
 	m_snap_bitmap.reset();
+
+#ifdef __LIBRETRO__
+	return;
+#endif
 
 	// print a final result if we have at least 2 seconds' worth of data
 	if (!emulator_info::standalone() && m_overall_emutime.seconds() >= 1)

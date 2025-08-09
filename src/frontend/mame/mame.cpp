@@ -142,10 +142,7 @@ void mame_machine_manager::start_luaengine()
 		std::string pluginpath;
 		while (iter.next(pluginpath))
 		{
-			// user may specify environment variables; subsitute them
-			pluginpath = osd_subst_env(pluginpath);
-
-			// and then scan the directory recursively
+			// scan the directory recursively
 			m_plugins->scan_directory(pluginpath, true);
 		}
 
@@ -202,7 +199,7 @@ void mame_machine_manager::start_luaengine()
 		std::error_condition const filerr = file.open("boot.lua");
 		if (!filerr)
 		{
-			const std::string exppath = osd_subst_env(file.fullpath());
+			const std::string exppath = file.fullpath();
 			auto &l(*lua());
 			auto load_result = l.load_script(exppath);
 			if (!load_result.valid())
@@ -276,7 +273,7 @@ int mame_machine_manager::execute()
 			m_options.revert(OPTION_PRIORITY_INI);
 
 			std::ostringstream errors;
-			mame_options::parse_standard_inis(m_options, errors);
+			mame_options::parse_standard_inis(m_options, errors, system);
 		}
 
 		// otherwise, perform validity checks before anything else
@@ -323,7 +320,10 @@ int mame_machine_manager::execute()
 		else
 		{
 			if (machine.exit_pending())
+			{
 				m_options.set_system_name("");
+				m_options.set_value(OPTION_BIOS, "", OPTION_PRIORITY_CMDLINE);
+			}
 		}
 
 		if (machine.exit_pending() && (!started_empty || is_empty))
@@ -341,31 +341,31 @@ extern int RLOOP,retro_pause;
 extern void retro_loop(running_machine *machine);
 extern void retro_execute();
 extern core_options *retro_global_options;
-int mfirst=0;
+int mfirst = 0;
 void mame_machine_manager::mmchange()
 {
-   mfirst=0;
+   mfirst = 0;
    // check the state of the machine
    if (m_new_driver_pending)
    {
       // set up new system name and adjust device options accordingly
       m_options.set_system_name(m_new_driver_pending->name);
       m_firstrun = true;
-      mfirst=1;
+      mfirst = 1;
    }
    else
    {
-      if (retro_global_machine->exit_pending())m_options.set_system_name("");
+      if (retro_global_machine->exit_pending())
+         m_options.set_system_name("");
    }
 
    //FIXME RETRO
    //if (retro_global_machine->exit_pending() && (!started_empty || (system == &GAME_NAME(___empty))))
    //exit_pending = true;
-
 }
  
-void free_machineconfig(){
-
+void free_machineconfig()
+{
 	delete retro_global_machine;
 	delete retro_global_config;
 
@@ -374,46 +374,42 @@ void free_machineconfig(){
 
 extern void free_man();
 
-
-void retro_finish(){
-	printf("retro_finish begin\n");
+void retro_finish()
+{
 	retro_global_machine->retro_machineexit();
 	free_machineconfig();
 	free_man();
-	printf("retro_finish end\n");
 }
 
 void retro_main_loop()
 {
 	retro_global_machine->retro_loop();
 
-	if(ENDEXEC==1){
-
-		ENDEXEC=0;
+	if (ENDEXEC == 1)
+	{
+		ENDEXEC = 0;
 
 		retro_manager->mmchange();
 
-		if(mfirst == 1){
+		if (mfirst == 1)
+		{
 			//restart a new driver from UI
 			retro_execute();
 			return;
 		}
-		else{ 
-			RLOOP=0;
+		else
+		{
+			RLOOP = 0;
 			
 			delete retro_global_machine;
 			delete retro_global_config;
 			retro_manager->set_machine(nullptr);
 
-			printf("exit scope, restart empty driver\n");
 			//FIXME restart empty driver else it crash
 			// we quit using retroarch (ESC or Menu)
 			retro_execute();
-
 		}
-
 	}
-
 }
 
 #endif

@@ -7,6 +7,10 @@
 #define RETRO_MAX_BUTTONS 16
 #endif
 
+#ifndef USE_XINPUT
+#define USE_XINPUT 0
+#endif
+
 #define HAVE_RGB32
 //FIXME: re-add way to handle 16/32 bit
 #if (!defined(HAVE_OPENGL) && !defined(HAVE_RGB32)) || (!defined(HAVE_OPENGLES) && !defined(HAVE_RGB32))
@@ -51,19 +55,21 @@ enum
    RETRO_SETTING_LIGHTGUN_MODE_LIGHTGUN
 };
 
-extern int NEWGAME_FROM_OSD;
-
+extern int video_changed;
+extern int retro_pause;
+extern int mame_reset;
+extern int ui_ipt_pushchar;
 extern char g_rom_dir[1024];
+extern char mediaType[10];
 extern const char *retro_save_directory;
 extern const char *retro_system_directory;
 extern const char *retro_content_directory;
-extern int retro_pause;
 
+extern int  lightgun_mode;
+extern int  lightgun_offscreen_mode;
 extern bool experimental_cmdline;
 extern bool hide_gameinfo;
 extern bool mouse_enable;
-extern int  lightgun_mode;
-extern int  lightgun_offscreen_mode;
 extern bool cheats_enable;
 extern bool alternate_renderer;
 extern bool boot_to_osd_enable;
@@ -81,9 +87,8 @@ extern bool buttons_profiles;
 extern bool mame_paths_enable;
 extern bool mame_4way_enable;
 extern char mame_4way_map[256];
-
-extern bool res_43;
-extern bool video_changed;
+extern char joystick_deadzone[8];
+extern char joystick_saturation[8];
 
 extern int mouseLX[8];
 extern int mouseLY[8];
@@ -95,22 +100,13 @@ extern int lightgunBUT[4];
 
 extern unsigned short retrokbd_state[RETROK_LAST];
 
-extern char mediaType[10];
-
-extern bool nobuffer_enable;
-
-extern int mame_reset;
-
-extern int ui_ipt_pushchar;
-
 extern int fb_width;
 extern int fb_height;
-extern int fb_pitch;
-extern int max_width;
-extern int max_height;
 extern float retro_aspect;
 extern float retro_fps;
 extern float view_aspect;
+extern int rotation_mode;
+extern int thread_mode;
 static const char core[] = "mame";
 
 /* libretro callbacks */
@@ -118,8 +114,6 @@ extern retro_log_printf_t log_cb;
 extern retro_environment_t environ_cb;
 extern retro_input_state_t input_state_cb;
 extern retro_input_poll_t input_poll_cb;
-
-void retro_switch_to_main_thread(void);
 
 void retro_frame_draw_enable(bool enable);
 

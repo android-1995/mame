@@ -22,7 +22,7 @@
 #include "../../libretro/osdretro.h"
 #include "../../libretro/window.h"
 
-static bool libretro_supports_bitmasks = false;
+extern bool libretro_supports_bitmasks;
 uint16_t retrokbd_state[RETROK_LAST];
 uint16_t retrokbd_state2[RETROK_LAST];
 int mouseLX[8];
@@ -150,7 +150,7 @@ kt_table ktable[]={
 {"-1",-1,ITEM_ID_INVALID},
 };
 
-const char *Buttons_Name[RETRO_MAX_BUTTONS]=
+const char *Buttons_Name[RETRO_MAX_BUTTONS] =
 {
 	"B",           //0
 	"Y",           //1
@@ -171,7 +171,15 @@ const char *Buttons_Name[RETRO_MAX_BUTTONS]=
 };
 
 //    Default : B ->B1 | A ->B2 | Y ->B3 | X ->B4 | L ->B5 | R ->B6
-int Buttons_mapping[]={RETROPAD_A,RETROPAD_B,RETROPAD_X,RETROPAD_Y,RETROPAD_L,RETROPAD_R};
+int Buttons_mapping[] =
+{
+   RETROPAD_B,
+   RETROPAD_A,
+   RETROPAD_Y,
+   RETROPAD_X,
+   RETROPAD_L,
+   RETROPAD_R
+};
 
 void Input_Binding(running_machine &machine)
 {
@@ -182,10 +190,10 @@ void Input_Binding(running_machine &machine)
    log_cb(RETRO_LOG_INFO, "YEAR: %s\n", machine.system().year);
    log_cb(RETRO_LOG_INFO, "MANUFACTURER: %s\n", machine.system().manufacturer);
 
-   Buttons_mapping[0]=RETROPAD_A;
-   Buttons_mapping[1]=RETROPAD_B;
-   Buttons_mapping[2]=RETROPAD_X;
-   Buttons_mapping[3]=RETROPAD_Y;
+   Buttons_mapping[0]=RETROPAD_B;
+   Buttons_mapping[1]=RETROPAD_A;
+   Buttons_mapping[2]=RETROPAD_Y;
+   Buttons_mapping[3]=RETROPAD_X;
    Buttons_mapping[4]=RETROPAD_L;
    Buttons_mapping[5]=RETROPAD_R;
 
@@ -354,7 +362,7 @@ void Input_Binding(running_machine &machine)
               !core_stricmp(machine.system().parent, "xmcota") ||
               !core_stricmp(machine.system().name, "xmvsf") ||
               !core_stricmp(machine.system().parent, "xmvsf") ||
-
+              
               !core_stricmp(machine.system().name, "astrass") ||
               !core_stricmp(machine.system().parent, "astrass") ||
               !core_stricmp(machine.system().name, "brival") ||
@@ -376,7 +384,9 @@ void Input_Binding(running_machine &machine)
               !core_stricmp(machine.system().name, "groovef") ||
               !core_stricmp(machine.system().parent, "groovef") ||
               !core_stricmp(machine.system().name, "kaiserkn") ||
-              !core_stricmp(machine.system().parent, "kaiserkn")
+              !core_stricmp(machine.system().parent, "kaiserkn") ||
+              !core_stricmp(machine.system().name, "ssoldier") ||
+              !core_stricmp(machine.system().parent, "ssoldier")
            )
    {
       /* 6-button fighting games (Mainly Capcom (CPS-1, CPS-2, CPS-3, ZN-1, ZN-2) + Others)*/
@@ -529,9 +539,6 @@ void Input_Binding(running_machine &machine)
       Buttons_mapping[5]=RETROPAD_R;
 
    }
-
-   if (environ_cb(RETRO_ENVIRONMENT_GET_INPUT_BITMASKS, NULL))
-      libretro_supports_bitmasks = true;
 }
 
 void retro_osd_interface::release_keys()
@@ -574,26 +581,23 @@ void retro_osd_interface::process_joypad_state(running_machine &machine)
 
    if (libretro_supports_bitmasks)
    {
-      for(j = 0;j < 8; j++)
-      {
-         ret[j] = 0;
+      for (j = 0; j < 8; j++)
          ret[j] = input_state_cb(j, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_MASK);
-      }
    }
    else
    {
-      for(j = 0;j < 8; j++)
+      for (j = 0; j < 8; j++)
       {
          ret[j] = 0;
-         for(i = 0;i < RETRO_MAX_BUTTONS; i++)
-            if (input_state_cb(j, RETRO_DEVICE_JOYPAD, 0,i))
+         for (i = 0; i < RETRO_MAX_BUTTONS; i++)
+            if (input_state_cb(j, RETRO_DEVICE_JOYPAD, 0, i))
                ret[j] |= (1 << i);
       }
    }
 
-   for(j = 0;j < 8; j++)
+   for (j = 0; j < 8; j++)
    {
-      for(i = 0;i < RETRO_MAX_BUTTONS; i++)
+      for (i = 0; i < RETRO_MAX_BUTTONS; i++)
       {
          if (ret[j] & (1 << i))
             joystate[j].button[i] = 0x80;
@@ -635,7 +639,7 @@ void retro_osd_interface::process_mouse_state(running_machine &machine)
 	     int mouse_m[8];
          int16_t mouse_x[8];
          int16_t mouse_y[8];
-         //printf("mouseneable=%d\n",mouse_enable);
+
          if (!mouse_enable)
             return;
 
@@ -720,7 +724,7 @@ void retro_osd_interface::process_mouse_state(running_machine &machine)
 						machine.ui_input().push_mouse_rup_event(window->target(), cx, cy);
 			}
 		 }
-
+	   
          if(mbM[i]==0 && mouse_m[i])
          {
             mbM[i]=1;
@@ -732,7 +736,6 @@ void retro_osd_interface::process_mouse_state(running_machine &machine)
             mbM[i]=0;
          }
    }
-	      //printf("vm(%d,%d) mc(%d,%d) mr(%d,%d)\n",vmx,vmy,mouse_x[0],mouse_y[0],mouseLX[0],mouseLY[0]);
 }
 
 void retro_osd_interface::process_lightgun_state(running_machine &machine)
@@ -875,7 +878,7 @@ public:
 
 	virtual void input_init(running_machine &machine) override
 	{
-		auto &devinfo = devicelist().create_device<retro_keyboard_device>(machine, "Retro Keyboard 1", "Retro Keyboard 1", *this);
+		auto &devinfo = devicelist().create_device<retro_keyboard_device>(machine, "RetroKeyboard0", "RetroKeyboard0", *this);
 
 		int i;
    		for(i = 0; i < RETROK_LAST; i++){
@@ -966,11 +969,11 @@ public:
 			return;
         int i;
 		char defname[32];
-
+		
 		for(i = 0; i < 8; i++)
 		{
-		   sprintf(defname, "Retro mouse%d", i);
-
+		   sprintf(defname, "RetroMouse%d", i);
+		   
 		   auto &devinfo = devicelist().create_device<retro_mouse_device>(machine, defname, defname, *this);
 
 		   mouseLX[i]=fb_width/2;
@@ -1211,13 +1214,13 @@ public:
 	{
 		if (!input_enabled() || !lightgun_enabled())
 			return;
-
+			
         int i;
  		char defname[32];
-
+		
 		for(i = 0; i < 8; i++)
 		{
-		   sprintf(defname, "Retro lightgun%d", i);
+		   sprintf(defname, "RetroLightgun%d", i);
 
 		   auto &devinfo = devicelist().create_device<retro_lightgun_device>(machine, defname, defname, *this);
 
