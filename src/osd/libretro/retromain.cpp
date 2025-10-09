@@ -399,16 +399,23 @@ void retro_osd_interface::customize_input_type_list(std::vector<input_type_entry
 				entry.defseq(SEQ_TYPE_STANDARD).set(KEYCODE_6, input_seq::or_code, JOYCODE_SELECT_INDEXED(1), input_seq::or_code, GUNCODE_BUTTON6_INDEXED(1));
 				break;
 
-			// Select + X
+			//region爱吾修改：修改自定义组合按键
+			// Select + Start = 菜单
 			case IPT_UI_MENU:
-				entry.defseq(SEQ_TYPE_STANDARD).set(KEYCODE_TAB, input_seq::or_code, JOYCODE_SELECT, JOYCODE_BUTTON3);
+				entry.defseq(SEQ_TYPE_STANDARD).set(KEYCODE_TAB, input_seq::or_code, JOYCODE_SELECT, JOYCODE_START);
 				break;
 
-			// Select + Start
+			// Select + C = 取消
 			case IPT_UI_CANCEL:
-				entry.defseq(SEQ_TYPE_STANDARD).set(KEYCODE_ESC, input_seq::or_code, JOYCODE_SELECT, JOYCODE_START);
+				entry.defseq(SEQ_TYPE_STANDARD).set(KEYCODE_ESC, input_seq::or_code, JOYCODE_SELECT, JOYCODE_BUTTON3);
 				break;
 
+			case IPT_SERVICE: //Start + A + B = Service
+				entry.defseq(SEQ_TYPE_STANDARD) |= (JOYCODE_START);
+				entry.defseq(SEQ_TYPE_STANDARD) += (JOYCODE_BUTTON1);
+				entry.defseq(SEQ_TYPE_STANDARD) += (JOYCODE_BUTTON2);
+			break;
+			//endregion爱吾修改：修改自定义组合按键
 			// leave everything else alone
 			default:
 				break;
