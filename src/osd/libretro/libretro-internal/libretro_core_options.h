@@ -806,6 +806,64 @@ struct retro_core_option_v2_definition option_defs_us[] = {
       },
       "0"
    },
+	//region 爱吾：增加一些设置项
+   {
+      CORE_NAME "_aiwu_show_fps",
+      "Show FPS",
+      NULL,
+      "Enable it to turn FPS display on",
+      NULL,
+      "system",
+      {
+         { "disabled", NULL },
+         { "enabled",  NULL },
+         { NULL, NULL },
+      },
+      "disabled"
+   },
+   {
+      CORE_NAME "_aiwu_auto_frameskip",
+      "Auto frameskip",
+      NULL,
+      "Enable it to turn auto frameskip on",
+      NULL,
+      "system",
+      {
+         { "disabled", NULL },
+         { "enabled",  NULL },
+         { NULL, NULL },
+      },
+      "disabled"
+   },
+   {
+      CORE_NAME "_aiwu_disable_drc",
+      "Disable DRC",
+      NULL,
+      "Disable DRC (dynamic recompiler) CPU core. Enable it to test compatibility in some games that freezes or not launch at the expense of performance",
+      NULL,
+      "system",
+      {
+         { "disabled", NULL },
+         { "enabled",  NULL },
+         { NULL, NULL },
+      },
+      "disabled"
+   },
+   {
+      CORE_NAME "_aiwu_enable_drc_use_c",
+      "DRC use C",
+      NULL,
+      "Force DRC to use the C backend (compatibility but much less performance)",
+      NULL,
+      "system",
+      {
+         { "disabled", NULL },
+         { "enabled",  NULL },
+         { NULL, NULL },
+      },
+      "disabled"
+   },
+	//endregion 爱吾：增加一些设置项
    { NULL, NULL, NULL, NULL, NULL, NULL, {{0}}, NULL },
 };
 

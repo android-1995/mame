@@ -70,6 +70,12 @@ char joystick_deadzone[8];
 char joystick_saturation[8];
 char joystick_threshold[8];
 
+//region 爱吾：增加一些设置项
+bool aiwu_auto_frameskip = false;
+bool aiwu_disable_drc = false;
+bool aiwu_enable_drc_use_c = false;
+//endregion 爱吾：增加一些设置项
+
 // emu flags
 static bool arcade = false;
 static int FirstTimeUpdate = 1;
@@ -542,6 +548,25 @@ static void Set_Default_Option(void)
       snprintf(option, sizeof(option), "%%g/%s", MgameName);
       Add_Option(option);
    }
+
+   //region 爱吾：增加一些设置项
+   if (aiwu_auto_frameskip)
+      Add_Option("-afs");
+
+   if (aiwu_disable_drc)
+   {
+      Add_Option("-nodrc");
+      Add_Option("-nodrc_use_c");
+   }
+   else
+   {
+      Add_Option("-drc");
+      if (aiwu_enable_drc_use_c)
+         Add_Option("-drc_use_c");
+      else
+         Add_Option("-nodrc_use_c");
+   }
+   //endregion 爱吾：增加一些设置项
 
    Add_Option("-update_in_pause");
 }

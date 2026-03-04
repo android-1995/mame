@@ -117,6 +117,12 @@ extern unsigned coin_limit;
 
 extern const char *slash_str;
 
+//region 爱吾：增加一些设置项
+extern bool aiwu_auto_frameskip;
+extern bool aiwu_disable_drc;
+extern bool aiwu_enable_drc_use_c;
+//endregion 爱吾：增加一些设置项
+
 /* libretro callbacks */
 extern retro_log_printf_t log_cb;
 extern retro_environment_t environ_cb;

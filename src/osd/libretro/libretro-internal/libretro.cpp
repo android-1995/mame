@@ -53,6 +53,10 @@ static bool draw_this_frame = true;
 static int maincpu_overclock = 100;
 static int soundcpu_overclock = 100;
 
+//region 爱吾：增加一些设置项
+static bool aiwu_show_fps = false;
+//endregion 爱吾：增加一些设置项
+
 const char *retro_save_directory;
 const char *retro_system_directory;
 const char *retro_content_directory;
@@ -589,11 +593,19 @@ void retro_set_environment(retro_environment_t cb)
    cb(RETRO_MAME_CARD_INTERFACE_SET, &card_call_back);
 }
 
+// 爱吾修改：前向声明 mame_ui_manager 类的 set_show_fps 方法
+class mame_ui_manager {
+public:
+	void set_show_fps(bool show);
+};
+
 static void update_runtime_variables(bool startup)
 {
    // Update CPU Overclock
    if (mame_machine_manager::instance() != NULL && mame_machine_manager::instance()->machine() != NULL)
    {
+      // 爱吾修改：FPS显示
+      mame_machine_manager::instance()->ui().set_show_fps(aiwu_show_fps);
       device_enumerator iter(mame_machine_manager::instance()->machine()->root_device());
       for (device_t &device : iter)
       {
@@ -935,6 +947,48 @@ static void check_variables(void)
    {
       sprintf(mediaType,"-%s",var.value);
    }
+
+   //region 爱吾：增加一些设置项
+   var.key   = CORE_NAME "_aiwu_show_fps";
+   var.value = NULL;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (!strcmp(var.value, "enabled"))
+         aiwu_show_fps = true;
+      if (!strcmp(var.value, "disabled"))
+         aiwu_show_fps = false;
+   }
+
+   var.key   = CORE_NAME "_aiwu_auto_frameskip";
+   var.value = NULL;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (!strcmp(var.value, "enabled"))
+         aiwu_auto_frameskip = true;
+      if (!strcmp(var.value, "disabled"))
+         aiwu_auto_frameskip = false;
+   }
+
+   var.key   = CORE_NAME "_aiwu_disable_drc";
+   var.value = NULL;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (!strcmp(var.value, "enabled"))
+         aiwu_disable_drc = true;
+      if (!strcmp(var.value, "disabled"))
+         aiwu_disable_drc = false;
+   }
+
+   var.key   = CORE_NAME "_aiwu_enable_drc_use_c";
+   var.value = NULL;
+   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+   {
+      if (!strcmp(var.value, "enabled"))
+         aiwu_enable_drc_use_c = true;
+      if (!strcmp(var.value, "disabled"))
+         aiwu_enable_drc_use_c = false;
+   }
+   //endregion 爱吾：增加一些设置项
 }
 
 unsigned retro_api_version(void)

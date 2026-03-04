@@ -1228,7 +1228,7 @@ endif # ifdef RETRO
 ifeq ($(OSD), retro)
 #RETRO HACK no sdl for libretro android
 $(PROJECTDIR)/$(MAKETYPE)-android-arm64/Makefile: makefile $(SCRIPTS) $(GENIE)
-	$(SILENT) $(GENIE) $(PARAMS) $(TARGET_PARAMS) --gcc=android-arm64 --gcc_version=$(CLANG_VERSION) --osd=retro --targetos=android --PLATFORM=arm64 --NO_USE_MIDI=1 --NO_OPENGL=1 --USE_QTDEBUG=0 --DONT_USE_NETWORK=1 --NOASM=1 $(MAKETYPE)
+	$(SILENT) $(GENIE) $(PARAMS) $(TARGET_PARAMS) --gcc=android-arm64 --gcc_version=$(CLANG_VERSION) --osd=retro --targetos=android --PLATFORM=arm64 --NO_USE_MIDI=1 --NO_OPENGL=1 --USE_QTDEBUG=0 --DONT_USE_NETWORK=1 --NOASM=0 $(MAKETYPE)
 
 .PHONY: android-arm64
 android-arm64: android-ndk generate $(PROJECTDIR)/$(MAKETYPE)-android-arm64/Makefile
