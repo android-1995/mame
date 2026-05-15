@@ -70,6 +70,13 @@ enum
    ROTATION_MODE_TATE_ROR
 };
 
+enum
+{
+   VIDEO_CHANGED_NONE,
+   VIDEO_CHANGED_AV_INFO,
+   VIDEO_CHANGED_GEOMETRY
+};
+
 extern bool retro_load_ok;
 extern int video_changed;
 extern int retro_pause;
@@ -80,11 +87,10 @@ extern const char *retro_save_directory;
 extern const char *retro_system_directory;
 extern const char *retro_content_directory;
 
-extern int  lightgun_mode;
-extern int  lightgun_offscreen_mode;
+extern int lightgun_mode;
+extern int lightgun_offscreen_mode;
 extern bool mouse_enable;
 extern bool cheats_enable;
-extern bool alternate_renderer;
 extern bool boot_to_osd_enable;
 extern bool boot_to_bios_enable;
 extern bool softlist_enable;
@@ -102,13 +108,13 @@ extern char mame_4way_map[256];
 extern char joystick_deadzone[8];
 extern char joystick_saturation[8];
 extern char joystick_threshold[8];
+extern char alternate_renderer;
 
 extern int fb_width;
 extern int fb_height;
 extern float retro_aspect;
 extern float view_aspect;
 extern float retro_fps;
-extern float sound_timer;
 extern int rotation_mode;
 extern int thread_mode;
 extern int screen_configured;

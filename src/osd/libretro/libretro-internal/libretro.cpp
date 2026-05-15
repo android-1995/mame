@@ -45,8 +45,7 @@ float retro_aspect = (float)4.0f / (float)3.0f;
 float view_aspect  = 1.0f;
 float sample_rate  = 48000.0f;
 float retro_fps    = 60.0f;
-float sound_timer  = 50.0f; /* default STREAMS_UPDATE_ATTOTIME, changed later to `retro_fps` */
-int video_changed  = 0;
+int video_changed  = VIDEO_CHANGED_NONE;
 int screen_configured = 0;
 
 static bool draw_this_frame = true;
@@ -401,9 +400,8 @@ static struct {
 
 static void ensure_output_audio_buffer_capacity(int32_t capacity)
 {
-   if (capacity <= output_audio_buffer.capacity) {
+   if (capacity <= output_audio_buffer.capacity)
       return;
-   }
 
    output_audio_buffer.data = (int16_t*)realloc(output_audio_buffer.data, capacity * sizeof(*output_audio_buffer.data));
    output_audio_buffer.capacity = capacity;
@@ -430,7 +428,11 @@ static void upload_output_audio_buffer()
 {
    if (!audio_ready)
    {
-      unsigned samples = (sample_rate / retro_fps);
+      unsigned samples = (sample_rate / retro_fps) * sizeof(*output_audio_buffer.data);
+
+      if (output_audio_buffer.capacity - output_audio_buffer.size < samples)
+         ensure_output_audio_buffer_capacity((output_audio_buffer.capacity + samples) * 1.5);
+
       memset(output_audio_buffer.data + output_audio_buffer.size, 0, samples * sizeof(*output_audio_buffer.data));
       output_audio_buffer.size += samples;
    }
@@ -736,15 +738,17 @@ static void check_variables(void)
    var.value = NULL;
    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
    {
-      bool alternate_renderer_prev = alternate_renderer;
+      char alternate_renderer_prev = alternate_renderer;
 
       if (!strcmp(var.value, "disabled"))
-         alternate_renderer = false;
+         alternate_renderer = 0;
       if (!strcmp(var.value, "enabled"))
-         alternate_renderer = true;
+         alternate_renderer = 1;
+      if (!strcmp(var.value, "cropped"))
+         alternate_renderer = 2;
 
       if (alternate_renderer != alternate_renderer_prev)
-         video_changed = 2;
+         video_changed = VIDEO_CHANGED_GEOMETRY;
    }
 
    var.key   = CORE_NAME "_altres";
@@ -768,18 +772,27 @@ static void check_variables(void)
          if (pch)
             height = strtoul(pch, NULL, 0);
 
-         if (width != fb_width || height != fb_height)
+         if ((width != fb_width || height != fb_height) || video_changed)
          {
             fb_width      = width;
             fb_height     = height;
-            video_changed = 2;
+            video_changed = VIDEO_CHANGED_GEOMETRY;
+
+            /* Respect source aspect ratio */
+            if (alternate_renderer == 2)
+            {
+               if (width > height)
+                  fb_width   = fb_height * retro_aspect;
+               else
+                  fb_height  = fb_width / retro_aspect;
+            }
 
             /* Must use SET_SYSTEM_AV_INFO when max is not enough */
             if (fb_width > max_width || fb_height > max_height)
             {
                max_width     = fb_width;
                max_height    = fb_height;
-               video_changed = 1;
+               video_changed = VIDEO_CHANGED_AV_INFO;
             }
          }
       }
@@ -1014,7 +1027,7 @@ void update_geometry(void)
    av_info.geometry.base_height  = fb_height;
    av_info.geometry.aspect_ratio = retro_aspect;
    environ_cb(RETRO_ENVIRONMENT_SET_GEOMETRY, &av_info);
-   video_changed = 0;
+   video_changed = VIDEO_CHANGED_NONE;
 }
 
 void update_av_info(void)
@@ -1022,7 +1035,7 @@ void update_av_info(void)
    struct retro_system_av_info av_info;
    retro_get_system_av_info(&av_info);
    environ_cb(RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO, &av_info);
-   video_changed = 0;
+   video_changed = VIDEO_CHANGED_NONE;
 }
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
@@ -1209,9 +1222,9 @@ void retro_run(void)
 #endif
    upload_output_audio_buffer();
 
-   if (video_changed == 1)
+   if (video_changed == VIDEO_CHANGED_AV_INFO)
       update_av_info();
-   else if (video_changed == 2)
+   else if (video_changed == VIDEO_CHANGED_GEOMETRY)
       update_geometry();
 }
 
@@ -1281,7 +1294,6 @@ void retro_unload_game(void)
       retro_pause = -1;
 }
 
-/* Stubs */
 size_t retro_serialize_size(void)
 {
    if (     mame_machine_manager::instance() != NULL
@@ -1293,21 +1305,27 @@ size_t retro_serialize_size(void)
 }
 bool retro_serialize(void *data, size_t size)
 {
+   save_error error = STATERR_NOT_FOUND;
    if (     mame_machine_manager::instance() != NULL
 	      && mame_machine_manager::instance()->machine() != NULL
 	      && ram_state::get_size(mame_machine_manager::instance()->machine()->save()) > 0)
-      return (mame_machine_manager::instance()->machine()->save().write_buffer((u8*)data, size) == STATERR_NONE);
+      error = mame_machine_manager::instance()->machine()->save().write_buffer((u8*)data, size);
 
-   return false;
+   if (error != STATERR_NONE)
+      log_cb(RETRO_LOG_ERROR, "State save error %d.\n", error);
+   return (error == STATERR_NONE);
 }
 bool retro_unserialize(const void *data, size_t size)
 {
+   save_error error = STATERR_NOT_FOUND;
    if (     mame_machine_manager::instance() != NULL
          && mame_machine_manager::instance()->machine() != NULL
          &&	ram_state::get_size(mame_machine_manager::instance()->machine()->save()) > 0)
-      return (mame_machine_manager::instance()->machine()->save().read_buffer((u8*)data, size) == STATERR_NONE);
+      error = mame_machine_manager::instance()->machine()->save().read_buffer((u8*)data, size);
 
-   return false;
+   if (error != STATERR_NONE)
+      log_cb(RETRO_LOG_ERROR, "State load error %d.\n", error);
+   return (error == STATERR_NONE);
 }
 
 unsigned retro_get_region (void) { return RETRO_REGION_NTSC; }
