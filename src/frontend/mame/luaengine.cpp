@@ -698,7 +698,8 @@ void lua_engine::on_machine_presave()
 void lua_engine::on_machine_postload()
 {
 	// clear waiting tasks
-	m_timer->reset();
+	// 爱吾：读取即时存档时改为不会改写序列化状态的处理。（用来支持RetroArch联机的CRC校验一致）
+	m_timer->enable(false);
 	std::vector<int> expired;
 	expired.reserve(m_waiting_tasks.size());
 	for (auto const &waiting : m_waiting_tasks)
